@@ -17,43 +17,44 @@ class TestCell: UITableViewCell {
     
     var mapImage: UIImage?
 
-    func setup() {
+    func setupWithMap(_ withMap: Bool) {
         mapViewContainer.isHidden = true
         mapLoadingIndicatorView.isHidden = true
-        
-        mapViewContainer.isHidden = false
-        if let mapImage = self.mapImage {
-            mapSnapshotImageView.image = mapImage
-        } else {
-            self.mapLoadingIndicatorView.isHidden = false
-            mapLoadingIndicatorView.startAnimating()
-            let centerCoordinate = CLLocationCoordinate2D(latitude: 25.131283, longitude: 55.117745)
-            let distanceInMeters: Double = 500
-            
-            let options = MKMapSnapshotter.Options()
-            options.region = MKCoordinateRegion(center: centerCoordinate, latitudinalMeters: distanceInMeters, longitudinalMeters: distanceInMeters)
-            options.size = self.mapSnapshotImageView.bounds.size
-            
-            let bgQueue = DispatchQueue.global(qos: .background)
-            let snapShotter = MKMapSnapshotter(options: options)
-            snapShotter.start(with: bgQueue, completionHandler: { [weak self] (snapshot, error) in
-                guard error == nil else {
-                    return
-                }
+        if withMap {
+            mapViewContainer.isHidden = false
+            if let mapImage = self.mapImage {
+                mapSnapshotImageView.image = mapImage
+            } else {
+                self.mapLoadingIndicatorView.isHidden = false
+                mapLoadingIndicatorView.startAnimating()
+                let centerCoordinate = CLLocationCoordinate2D(latitude: 25.131283, longitude: 55.117745)
+                let distanceInMeters: Double = 500
                 
-                if let snapShotImage = snapshot?.image {
-                    UIGraphicsBeginImageContextWithOptions(snapShotImage.size, true, snapShotImage.scale)
-                    snapShotImage.draw(at: CGPoint.zero)
-                    let mapImage = UIGraphicsGetImageFromCurrentImageContext()
-                    DispatchQueue.main.async {
-                        self?.mapSnapshotImageView.image = mapImage
-                        self?.mapLoadingIndicatorView.stopAnimating()
-                        self?.mapLoadingIndicatorView.isHidden = true
-                        self?.mapImage = mapImage
+                let options = MKMapSnapshotter.Options()
+                options.region = MKCoordinateRegion(center: centerCoordinate, latitudinalMeters: distanceInMeters, longitudinalMeters: distanceInMeters)
+                options.size = self.mapSnapshotImageView.bounds.size
+                
+                let bgQueue = DispatchQueue.global(qos: .background)
+                let snapShotter = MKMapSnapshotter(options: options)
+                snapShotter.start(with: bgQueue, completionHandler: { [weak self] (snapshot, error) in
+                    guard error == nil else {
+                        return
                     }
-                    UIGraphicsEndImageContext()
-                }
-            })
+                    
+                    if let snapShotImage = snapshot?.image {
+                        UIGraphicsBeginImageContextWithOptions(snapShotImage.size, true, snapShotImage.scale)
+                        snapShotImage.draw(at: CGPoint.zero)
+                        let mapImage = UIGraphicsGetImageFromCurrentImageContext()
+                        DispatchQueue.main.async {
+                            self?.mapSnapshotImageView.image = mapImage
+                            self?.mapLoadingIndicatorView.stopAnimating()
+                            self?.mapLoadingIndicatorView.isHidden = true
+                            self?.mapImage = mapImage
+                        }
+                        UIGraphicsEndImageContext()
+                    }
+                })
+            }
         }
     }
     
